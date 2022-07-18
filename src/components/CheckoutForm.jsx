@@ -1,14 +1,18 @@
-import { usePluto } from '@plutohq/pluto-react';
+import { usePluto, ConnectSolWallet } from '@plutohq/pluto-react';
 import React from 'react';
+import currencies from '../constants/currencies.json';
+import explorers from '../constants/explorers.json';
 import ConnectEthWallet from './ConnectEthWallet';
 import PaymentModal from './PaymentModal';
 
-export default function CheckoutForm() {
+export default function CheckoutForm({ currencyCode }) {
   const pluto = usePluto();
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
   const [transaction, setTransaction] = React.useState(null);
   const [showPaymentModal, setShowPaymentModal] = React.useState(false);
+
+  const currency = React.useMemo(() => currencies.find((c) => c.code === currencyCode), [currencyCode]);
 
   const handleSubmit = React.useCallback(
     async (event) => {
@@ -21,6 +25,7 @@ export default function CheckoutForm() {
         body: JSON.stringify({
           name: event.target.name.value,
           email: event.target.email.value,
+          currency: currencyCode,
         }),
       })
         .then((res) => res.json())
@@ -47,7 +52,7 @@ export default function CheckoutForm() {
           .finally(() => setLoading(false));
       }
     },
-    [pluto],
+    [currencyCode, pluto],
   );
 
   return (
@@ -75,7 +80,7 @@ export default function CheckoutForm() {
             View your transaction:&nbsp;
             <a
               target="_blank"
-              href={`https://rinkeby.etherscan.io/tx/${transaction}`}
+              href={explorers[currency.chain].replace('[HASH]', transaction)}
               className="text-purple-500 hover:text-purple-600 outline-none"
               rel="noreferrer"
             >
@@ -84,7 +89,8 @@ export default function CheckoutForm() {
           </div>
         )}
         <div className="flex w-full flex-col space-y-4">
-          <ConnectEthWallet />
+          {currency.chain === 'eth' && <ConnectEthWallet />}
+          {currency.chain === 'sol' && <ConnectSolWallet />}
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="flex w-full flex-col space-y-1 sm:w-1/3">
               <label htmlFor="name">Name</label>
@@ -110,7 +116,7 @@ export default function CheckoutForm() {
           className="w-full rounded bg-purple-500 py-1 px-2 text-white shadow transition hover:bg-purple-600"
           type="submit"
         >
-          {loading ? 'Processing...' : 'Pay 0.01 ETH'}
+          {loading ? 'Processing...' : `Pay 0.01 ${currency.code.toUpperCase()}`}
         </button>
       </form>
     </>
