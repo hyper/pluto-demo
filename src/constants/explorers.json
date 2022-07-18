@@ -1,0 +1,4 @@
+{
+  "eth": "https://rinkeby.etherscan.io/tx/[HASH]",
+  "sol": "https://solscan.io/tx/[HASH]?cluster=devnet"
+}

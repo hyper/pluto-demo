@@ -1,9 +1,11 @@
+import currencies from '../../constants/currencies.json';
 import pluto from '../../lib/pluto';
 
 async function handler(req, res) {
   try {
     if (req.method === 'POST') {
-      if (!req.body.name || !req.body.email) return res.status(400).json({ error: 'Missing name or email' });
+      const currency = currencies.find((c) => c.code === req.body.currency);
+      if (!req.body.name || !req.body.email || !currency) return res.status(400).json({ error: 'Missing name or email' });
 
       const customer = await pluto.customers.create({
         name: req.body.name,
@@ -11,8 +13,8 @@ async function handler(req, res) {
       });
 
       const paymentIntent = await pluto.paymentIntents.create({
-        chain: 'eth',
-        currency: 'eth',
+        chain: currency.chain,
+        currency: currency.code,
         amount: 0.01,
         customer: customer.id,
       });
